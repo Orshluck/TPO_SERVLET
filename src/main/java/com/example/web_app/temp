@@ -1,0 +1,36 @@
+String[] instruments = {"Piano","Guitar","Violin","Drums","Flute",
+                "Saxophone","Trumpet","Cello","Electric Bass","Clarinet",
+                "Acoustic Guitar","Trombone","Ukulele","Double Bass","Electric Guitar",
+                "Keyboard","Harp","French Horn","Viola","Accordion"};
+
+        String[] Generes = {"Pop","Rock","Hip Hop","Country","Jazz","Electronic","R&B","Classical","Grunge","Metal"};
+        String [] Band = {"Placebo","Cage the elephant","Alice in chains","Rick Astley","Calla"};
+        Album [] Albums = {
+                new Album(1,"Meds",2006),
+                new Album(2,"Social clues",2019),
+                new Album(3,"Jar of flies",1994),
+                new Album(4,"Dirt",1992),
+                new Album(5,"Collisions",2005),
+                new Album(6,"Televise",2003),
+        };
+
+        Utwor[] Songs = {
+                new Utwor("It dawned on me",5,1,193,"And there is no one else but me "),
+                new Utwor("This better go as planned",5,238,2005,"Did you mean it"),
+                new Utwor("No excuses",3,8,255,"Everyday it's something"),
+                new Utwor("Rotten apple",3,8,418,"Arrogance is potent hey"),
+                new Utwor("Social cues",2,0,219,"Choose your favorite vice"),
+                new Utwor("Black Madonna",2,0,226,"Soft glow on the city")
+
+        };
+
+
+        String createUtwór = "CREATE TABLE Utwor (\n" +
+                            "    IdUtwor int  NOT NULL,\n" +
+                            "    Nazwa varchar(50)  NOT NULL,\n" +
+                            "    czas_secs int  NOT NULL,\n" +
+                            "    Tekst text  NOT NULL,\n" +
+                            "    Album_IdAlbum int  NOT NULL,\n" +
+                            "    Gatunek_IdGatunek int  NOT NULL,\n" +
+                            "    CONSTRAINT Utwor_pk PRIMARY KEY  (IdUtwor)\n" +
+                            ")";

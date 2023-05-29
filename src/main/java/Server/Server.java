@@ -2,6 +2,7 @@ package Server;
 
 import Server.DTO.Album;
 import Server.DTO.Utwor;
+import com.example.web_app.Index;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Optional;
 public class Server {
 
     Connection connection = null;
+    boolean created = false;
     public Server(){
         try {
             connection = DriverManager.getConnection("jdbc:derby:MusicDataBase;create=true");
@@ -20,31 +22,45 @@ public class Server {
         }
     }
 
+    public int CloseServer(){
+        try {
+            connection.close();
+            return 1;
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
     public void generateTables(){
         // section to drop if exists
+        if (created){
+            return;
+        }
         try {
             //TODO: add names to this so you can check from then in execution
             String [] SQLCommands = {
                     "ALTER TABLE Utwor DROP CONSTRAINT Utwor_Gatunek",
+                    "ALTER TABLE Utwor DROP CONSTRAINT Utwor_Album",
                     "ALTER TABLE Utwor_wykonawca DROP CONSTRAINT Utwor_wykonawca_Utwor",
                     "ALTER TABLE Utwor_wykonawca DROP CONSTRAINT Utwor_wykonawca_Wykonawca",
                     "ALTER TABLE Utwory_Instrumenty DROP CONSTRAINT Utwory_Instrumenty_Instrumenty",
                     "ALTER TABLE Utwory_Instrumenty DROP CONSTRAINT Utwory_Instrumenty_Utwor",
-                    "DROP TABLE Album IF EXISTS Album",
-                    "DROP TABLE Gatunek IF EXISTS Gatunek ",
-                    "DROP TABLE Instrumenty IF EXISTS Instrumenty",
-                    "DROP TABLE Utwor IF EXISTS Utwor",
-                    "DROP TABLE Utwor_wykonawca IF EXISTS Utwor_wykonawca",
-                    "DROP TABLE Utwory_Instrumenty IF EXISTS Utwory_Instrumenty",
-                    "DROP TABLE Wykonawca IF EXISTS Wykonawca",
+                    "DROP TABLE Album",
+                    "DROP TABLE Gatunek",
+                    "DROP TABLE Instrumenty",
+                    "DROP TABLE Utwor",
+                    "DROP TABLE Utwor_wykonawca",
+                    "DROP TABLE Utwory_Instrumenty",
+                    "DROP TABLE Wykonawca",
             };
 
             Statement statement = connection.createStatement();
             for (String command : SQLCommands
                  ) {
                 try{
-
+                    System.out.println("command is " + command);
                     statement.executeUpdate(command);
+                    System.out.println("finished command correctly");
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -64,7 +80,7 @@ public class Server {
                     "    Rok int  NOT NULL,\n" +
                     "    CONSTRAINT Album_pk PRIMARY KEY  (IdAlbum)\n" +
                     ")";
-            //SQLCommands.add(createAlbum);
+            SQLCommands.add(createAlbum);
             String createGatunek = "CREATE TABLE Gatunek (\n" +
                     "    IdGatunek int  NOT NULL,\n" +
                     "    Nazwa varchar(50)  NOT NULL,\n" +
@@ -77,16 +93,16 @@ public class Server {
                     "    CONSTRAINT Instrumenty_pk PRIMARY KEY  (IdInstrument)\n" +
                     ")";
             SQLCommands.add(createInstrumenty);
-            String createUtwór = "CREATE TABLE Utwor (\n" +
+            String createUtwor = "CREATE TABLE Utwor (\n" +
                     "    IdUtwor int  NOT NULL,\n" +
                     "    Nazwa varchar(50)  NOT NULL,\n" +
                     "    czas_secs int  NOT NULL,\n" +
-                    "    Tekst text  NOT NULL,\n" +
+                    "    Tekst varchar(100)  NOT NULL,\n" +
                     "    Album_IdAlbum int  NOT NULL,\n" +
                     "    Gatunek_IdGatunek int  NOT NULL,\n" +
                     "    CONSTRAINT Utwor_pk PRIMARY KEY  (IdUtwor)\n" +
                     ")";
-            SQLCommands.add(createUtwór);
+            SQLCommands.add(createUtwor);
             String createUtwor_wykonawca = "CREATE TABLE Utwor_wykonawca (\n" +
                     "    Utwor_IdUtwor int  NOT NULL,\n" +
                     "    Wykonawca_IdWykonawca int  NOT NULL,\n" +
@@ -135,9 +151,12 @@ public class Server {
             for (String command : SQLCommands
                  ) {
                 try {
+                    System.out.println("Executing command : " + command);
                     statement.executeUpdate(command);
+                    System.out.println("Finished correctly");
                 }catch (Exception e){
-                    // well then keep it to yourself
+                    System.out.println("Error with command");
+                    e.printStackTrace();
                 }
             }
         } catch (SQLException e) {
@@ -156,6 +175,76 @@ public class Server {
             return false;
         }
 
+    }
+    public void seed2() throws SQLException {
+        if (created){
+            return;
+        }
+        System.out.println("Started seeding");
+        Statement statement = connection.createStatement();
+        statement.executeUpdate("INSERT INTO Album (IdAlbum, Nazwa, ROK) VALUES (1, 'Social clues', 2019)");
+        statement.executeUpdate("INSERT INTO Album (IdAlbum, Nazwa, ROK) VALUES (2, 'Jar of flies', 1994)");
+
+        // Seed data for Gatunek table
+        statement.executeUpdate("INSERT INTO Gatunek (IdGatunek, Nazwa) VALUES (1, 'Pop')");
+        statement.executeUpdate("INSERT INTO Gatunek (IdGatunek, Nazwa) VALUES (2, 'Rock')");
+        statement.executeUpdate("INSERT INTO Gatunek (IdGatunek, Nazwa) VALUES (3, 'Hip Hop')");
+        statement.executeUpdate("INSERT INTO Gatunek (IdGatunek, Nazwa) VALUES (4, 'Country')");
+
+        // Seed data for Instrumenty table
+        statement.executeUpdate("INSERT INTO Wykonawca (IdWykonawca, Nazwa) VALUES (1, 'Cage the Elephant')");
+        statement.executeUpdate("INSERT INTO Wykonawca (IdWykonawca, Nazwa) VALUES (2, 'Alice in Chains')");
+
+
+
+        statement.executeUpdate("INSERT INTO Instrumenty (IdInstrument, Nazwa) VALUES (1, 'Bass')");
+        statement.executeUpdate("INSERT INTO Instrumenty (IdInstrument, Nazwa) VALUES (2, 'Guitar')");
+        statement.executeUpdate("INSERT INTO Instrumenty (IdInstrument, Nazwa) VALUES (3, 'Drums')");
+
+
+        // Seed data for Utwor table
+        statement.executeUpdate("INSERT INTO Utwor (IdUtwor,Nazwa, czas_secs, Tekst, Album_IdAlbum, Gatunek_IdGatunek) " +
+                "VALUES (1, 'It dawned on me', 193, 'And there is no one else but me', 1, 2)");
+        statement.executeUpdate("INSERT INTO Utwor (IdUtwor, Nazwa, czas_secs, Tekst, Album_IdAlbum, Gatunek_IdGatunek) " +
+                "VALUES (2, 'Black Madonna', 226, 'Soft glow on the city', 2, 2)");
+
+        // Seed data for Utwor_wykonawca table
+        statement.executeUpdate("INSERT INTO Utwor_wykonawca (Utwor_IdUtwor, Wykonawca_IdWykonawca) VALUES (1, 1)");
+        statement.executeUpdate("INSERT INTO Utwor_wykonawca (Utwor_IdUtwor, Wykonawca_IdWykonawca) VALUES (2, 2)");
+
+        // Seed data for Utwory_Instrumenty table
+        statement.executeUpdate("INSERT INTO Utwory_Instrumenty (Utwor_IdUtwor, Instrumenty_IdInstrument) VALUES (1, 1)");
+        statement.executeUpdate("INSERT INTO Utwory_Instrumenty (Utwor_IdUtwor, Instrumenty_IdInstrument) VALUES (1, 2)");
+        statement.executeUpdate("INSERT INTO Utwory_Instrumenty (Utwor_IdUtwor, Instrumenty_IdInstrument) VALUES (1, 3)");
+        statement.executeUpdate("INSERT INTO Utwory_Instrumenty (Utwor_IdUtwor, Instrumenty_IdInstrument) VALUES (2, 1)");
+        statement.executeUpdate("INSERT INTO Utwory_Instrumenty (Utwor_IdUtwor, Instrumenty_IdInstrument) VALUES (2, 2)");
+        statement.executeUpdate("INSERT INTO Utwory_Instrumenty (Utwor_IdUtwor, Instrumenty_IdInstrument) VALUES (2, 3)");
+        System.out.println("Finished seeding");
+
+
+        String query = "SELECT * FROM Wykonawca";
+        List<Integer> bandList = new ArrayList<>();
+        try (PreparedStatement statement2 = connection.prepareStatement(query)) {
+            //statement.setString(1,  bandName );
+            ResultSet resultSet = statement2.executeQuery();
+            System.out.println("result set length is " + resultSet.getFetchSize());
+            while (resultSet.next()) {
+                System.out.print("result = ");
+                System.out.println(resultSet.getInt("IdWykonawca") + " " + resultSet.getString("Nazwa"));
+                int id = resultSet.getInt("IdWykonawca");
+                String ID = resultSet.getString("IdWykonawca");
+                bandList.add(Integer.parseInt(ID));
+            }
+
+            // Use the bandList as per your requirement
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+
+
+        created = true;
     }
 
     public void seed() throws SQLException {
@@ -187,15 +276,18 @@ public class Server {
         };
         Statement statement = connection.createStatement();
 
-        for (int i = 0; i <instruments.length; i++) {
-            try{
-                statement.executeUpdate("INSERT INTO INSTRUMENTY VALUES("+i+",'"+instruments[i]+"')");
+//        for (int i = 0; i <instruments.length; i++) {
+//            try{
+//                statement.executeUpdate("INSERT INTO INSTRUMENTY VALUES("+i+",'"+instruments[i]+"')");
+//
+//            }catch (Exception e){
+//                // Cant update because this value is already there
+//            }
+//
+//        }
 
-            }catch (Exception e){
-                // Cant update because this value is already there
-            }
 
-        }
+
 
         // VERSION 2
 //        String sql = "INSERT INTO Instrumenty VALUES (?, ?)";
@@ -229,4 +321,33 @@ public class Server {
         return instruments;
     }
 
+    public String[] getSongsByBand(String searchText) {
+        getIdbyBand(searchText).forEach(System.out::println);
+        return new String[]{"TEST"};
+    }
+
+    private List<Integer> getIdbyBand(String bandName){
+        //String query = "SELECT IdWykonawca FROM Wykonawca WHERE Nazwa like ?";
+        String query = "SELECT * FROM Wykonawca";
+        List<Integer> bandList = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            //statement.setString(1,  bandName );
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                System.out.print("result = ");
+                System.out.println(resultSet.toString());
+                int id = resultSet.getInt("IdWykonawca");
+                bandList.add(id);
+            }
+
+            // Use the bandList as per your requirement
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+        System.out.println("====");
+        bandList.forEach(System.out::println);
+        System.out.println("====");
+        return bandList;
+    }
 }
